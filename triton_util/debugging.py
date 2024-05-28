@@ -23,13 +23,13 @@ def test_pid_conds(conds):
 
 @triton.jit
 def breakpoint_if(conds):
-    '''Stop kernel, if any condition of pids is fulfilled'''
+    '''Stop kernel, if condition on pids is fulfilled'''
     from IPython.core.debugger import set_trace
     if test_pid_conds(conds): set_trace()
 
 @triton.jit
 def print_if(txt, conds):
-    '''Print txt, if any condition of pids is fulfilled'''
+    '''Print txt, if condition on pids is fulfilled'''
     if test_pid_conds(conds): print(txt)
 
 @triton.jit
