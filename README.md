@@ -3,16 +3,11 @@
 
 Writing fast GPU kernels is easier with Triton than with CUDA, but there is still a lot of tedious indices juggling. That is not necessary.
 
-**Triton-util provides simple higher level abstractions for frequent but repetetive tasks.** This allows you to write code that is more like your actual ideas.
+**Triton-util provides simple higher-level abstractions for frequent but repetitive tasks.** This allows you to write code that is closer to how you actually think.
 
-Example: Say you have a 2d matrix which you have chunked along both axes, and you want to get the next chunk. With triton-util, you write
+Example: Say you have a 2d matrix of shape `(max0,max1)` and stride `(stride0,stride1)`, which you have chunked along both axes. Each chunk is size `(sz0,sz1)`, and you want to get the `(n0,n1)`th chunk. With triton-util, you write
 ```py
-# ptr = pointer to matrix
-# sz0/sz1 = sizes of chunk
-# n0/n1 = index of chunk
-# max0/max1 = bound of matrix
-# stride0/stride1 = strides of matrix (stride1 is not set, so will use the sensible default 1)
-load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0)
+load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0) # stride1 defaults to 1
 ```
 instead of
 ```py
