@@ -79,4 +79,11 @@ Additionally, triton-util provides utility functions to make debugging easier. W
 
 ___
 
+Other resources: Looking for ...
+- a gentle introduction to Triton? - See [A Practiotioner's Guide to Triton](https://www.youtube.com/watch?v=DdTsX6DQk24) and it's [accompanying notebook](https://github.com/cuda-mode/lectures/blob/main/lecture_014/A_Practitioners_Guide_to_Triton.ipynb)
+- world-class real-life triton kernels? - See [triton-index](https://github.com/cuda-mode/triton-index)
+- a crazy competent and kind community where you can ask questions (beginner or advanced!)? - See [cuda mode discord](https://discord.gg/cudamode), which has a triton channel
+
+---
+
 Brought to you by [Umer](https://x.com/UmerHAdil) ❤️
