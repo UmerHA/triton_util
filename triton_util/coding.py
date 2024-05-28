@@ -4,16 +4,16 @@ import triton.language as tl
 def cdiv(a,b): return (a + b - 1) // b
 
 @triton.jit
-def get_1d_offset(size, n_prev_chunks=0): return n_prev_chunks * size + tl.arange(0, size)
+def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
 
 @triton.jit
-def get_2d_offset(offs_0, offs_1, stride_0, stride_1=1):  return tl.expand_dims(offs_0, 1)*stride_0 + tl.expand_dims(offs_1, 0)*stride_1
+def get_2d_offset(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
 
 @triton.jit
 def get_1d_mask(offs, max): return offs < max
 
 @triton.jit
-def get_2d_mask(offs_0, offs_1, max_0, max_1): return (tl.expand_dims(offs_0, 1) < max_0) & (tl.expand_dims(offs_1, 0) < max_1)
+def get_2d_mask(offs0, offs1, max0, max1): return (tl.expand_dims(offs0, 1) < max0) & (tl.expand_dims(offs1, 0) < max1)
 
 @triton.jit
 def load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1):
