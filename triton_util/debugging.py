@@ -2,15 +2,14 @@ import os
 import triton
 import triton.language as tl
 
-@triton.jit
-def test_pid_conds(conds):
+def _test_pid_conds(conds, pid0=0, pid1=0, pid2=0):
     '''Test if condition on pids are fulfilled
     E.g.:
         '=0'    checks that pid_0 == 0
         ',>1'   checks that pid_1 > 1
         '>1,=0' checks that pid_0 > 1 and pid_1 == 0
     '''
-    pids = tl.program_id(0)[0], tl.program_id(1)[0], tl.program_id(2)[0]
+    pids = pid0, pid1, pid2
     conds = conds.replace(' ','').split(',')
     for i, (cond, pid) in enumerate(zip(conds, pids)):
         if cond=='': continue
@@ -20,6 +19,16 @@ def test_pid_conds(conds):
         op = '==' if op == '=' else op
         if not eval(f'{pid} {op} {threshold}'): return False
     return True
+
+@triton.jit
+def test_pid_conds(conds):
+    '''Test if condition on pids are fulfilled
+    E.g.:
+        '=0'    checks that pid_0 == 0
+        ',>1'   checks that pid_1 > 1
+        '>1,=0' checks that pid_0 > 1 and pid_1 == 0
+    '''
+    return _test_pid_conds(tl.program_id(0)[0], tl.program_id(1)[0], tl.program_id(2)[0])
 
 @triton.jit
 def breakpoint_if(conds):
