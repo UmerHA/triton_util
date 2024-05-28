@@ -33,14 +33,14 @@ Additionally, triton-util provides utility functions to make debugging easier. W
 
 `print_if(txt, conds)`
 - Print txt, if condition on pids is fulfilled
-- Eg `breakpoint_if('=0,>1')` stops if `pid_0 = 0`, `pid_1 > 1` and `pid_2` is abitrary
+- Eg `print_if(txt, '=0,>1')` prints if `pid_0 = 0`, `pid_1 > 1` and `pid_2` is arbitrary
 
 `breakpoint_if(conds)`
 - Enter breakpoint, if condition on pids is fulfilled
-- Eg `breakpoint_if('=0,>1')` stops if `pid_0 = 0`, `pid_1 > 1` and `pid_2` is abitrary
+- Eg `breakpoint_if('=0,>1')` stops if `pid_0 = 0`, `pid_1 > 1` and `pid_2` is arbitrary
 
 `assert_tensors_gpu_ready(*tensors)`
-- assert all tensors are contiguous, and (unless `'TRITON_INTERPRET'=='1'`) on GPU
+- assert all tensors are contiguous, and on GPU (unless `'TRITON_INTERPRET'=='1'`)
 
 <br/>
 
