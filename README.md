@@ -18,7 +18,7 @@ mask = (offs0[:,None] < max0) & (offs1[None,:] < max1)
 tl.load(ptr + offs, mask) 
 ```
 
-Additionally, triton-util provides **handy utility functions to make debugging easier**. Want to print `txt` only on the 1st kernel? Write `print_once('txt')` - that's it!
+Additionally, triton-util provides **handy utility functions to make debugging easier**. Want to print `txt` only on the 1st kernel? Write `print_once(txt)` - that's it!
 
 Finally, triton-util is progressive, ie you can **use as little or as much as you want**. It's fully interoperable with triton. (It is, in fact, pure triton.)
 
