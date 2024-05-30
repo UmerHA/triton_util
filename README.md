@@ -15,7 +15,7 @@ offs0 = n0 * sz0 + tl.arange(0, sz0)
 offs1 = n1 * sz1 + tl.arange(0, sz1)
 offs = offs0[:,None] * stride0 + offs1[None,:] * stride1
 mask = (offs0[:,None] < max0) & (offs1[None,:] < max1)
-return tl.load(ptr + offs, mask) 
+tl.load(ptr + offs, mask) 
 ```
 
 Additionally, triton-util provides **handy utility functions to make debugging easier**. Want to print `txt` only on the 1st kernel? Write `print_once('txt')` - that's it!
