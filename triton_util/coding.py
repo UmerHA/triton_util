@@ -1,5 +1,6 @@
 import triton
 import triton.language as tl
+import inspect
 
 def cdiv(a,b): return (a + b - 1) // b
 
@@ -60,3 +61,15 @@ def store_full_1d(vals, ptr, sz, stride=1):
     offs = get_1d_offset(sz)
     mask = get_1d_mask(offs, sz)
     return tl.store(ptr + offs, vals, mask)
+
+def const_type_hints(func, non_const_ending='_ptr'):
+    '''Make every non-pointer argument a tl.constexpr. Arguments are pointers if their name ends with `non_const_ending`, which defaults to '_ptr'.'''
+    sig = inspect.signature(func)
+    new_params = [
+        param if name.endswith(non_const_ending) else param.replace(annotation=tl.constexpr)
+        for name, param in sig.parameters.items()
+    ]
+    new_sig = sig.replace(parameters=new_params)
+    def wrapper(*args, **kwargs): return func(*args, **kwargs)
+    wrapper.__signature__ = new_sig
+    return wrapper
