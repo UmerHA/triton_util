@@ -4,7 +4,7 @@ import inspect
 
 import triton.language as tl
 
-from triton_util.coding import cdiv, const
+from triton_util.coding import cdiv, constify
 
 class TestTritonUtil(unittest.TestCase):
     
@@ -12,20 +12,20 @@ class TestTritonUtil(unittest.TestCase):
         self.assertEqual(cdiv(10, 2), 5)
         self.assertEqual(cdiv(10, 3), 4)
 
-    def test_const(self):
-        @const(const='p1 p2 p3')
+    def test_constify(self):
+        @constify(const='p1 p2 p3')
         def fn1(p1, p2, p3, p4, p5_ptr, p6): pass
 
-        @const(but='p4 p5')
+        @constify(but='p4 p5')
         def fn2(p1, p2, p3, p4, p5): pass
 
-        @const(but='*_ptr')
+        @constify(but='*_ptr')
         def fn3(p1, p2, p3, p4_ptr, p5, p6_ptr): pass
 
-        @const(but='p4 *_ptr')
+        @constify(but='p4 *_ptr')
         def fn4(p1, p2, p3, p4, p5_ptr, p6): pass
 
-        @const()
+        @constify()
         def fn5(p1, p2, p3): pass
 
         for fn, const_params in [

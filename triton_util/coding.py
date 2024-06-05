@@ -5,7 +5,7 @@ import re
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def const(func, const='', *, but=''):
+def constify(func, const='', *, but=''):
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
     sig = inspect.signature(func)
@@ -30,8 +30,8 @@ def const(func, const='', *, but=''):
     return wrapper
 
 def tjit(fn = None, *, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
-    '''Apply const and triton.jit to fn.'''
-    fn = const(fn, const=const, but=non_const)
+    '''Apply constify and triton.jit to fn.'''
+    fn = constify(fn, const=const, but=non_const)
     return triton.jit(fn, version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
 
 @tjit(const='sz')
