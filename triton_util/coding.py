@@ -5,33 +5,32 @@ import re
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def constify(func, const='', *, but=''):
+def constify(const='', *, but=''):
+    '''Make params '''
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
-    sig = inspect.signature(func)
-
-    def match_pattern(param_name, pattern):
-        regex = re.sub(r'\*', r'.*', pattern) # Convert wildcard pattern to regex pattern
-        return re.match(f"^{regex}$", param_name)
-
-    def should_be_const(param_name):
-        if const != '': return any(match_pattern(param_name, pattern) for pattern in const)
-        if but != '':   return not any(match_pattern(param_name, pattern) for pattern in but)
-        raise False
-    
-    new_params = [
-        param.replace(annotation=tl.constexpr) if should_be_const(name) else param
-        for name, param in sig.parameters.items()
-    ]
-
-    new_sig = sig.replace(parameters=new_params)
-    def wrapper(*args, **kwargs): return func(*args, **kwargs)
-    wrapper.__signature__ = new_sig
-    return wrapper
+    def _inner(func):
+        sig = inspect.signature(func)
+        def match_pattern(param_name, pattern):
+            regex = re.sub(r'\*', r'.*', pattern)
+            return re.match(f"^{regex}$", param_name)
+        def should_be_const(param_name):
+            if const != ['']: return any(match_pattern(param_name, pattern) for pattern in const)
+            if but   != ['']: return not any(match_pattern(param_name, pattern) for pattern in but)
+            raise False
+        new_params = [
+            param.replace(annotation=tl.constexpr) if should_be_const(name) else param
+            for name, param in sig.parameters.items()
+        ]
+        new_sig = sig.replace(parameters=new_params)
+        def wrapper(*args, **kwargs): return func(*args, **kwargs)
+        wrapper.__signature__ = new_sig
+        return wrapper
+    return _inner
 
 def tjit(fn = None, *, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
     '''Apply constify and triton.jit to fn.'''
-    fn = constify(fn, const=const, but=non_const)
+    fn = constify(const=const, but=non_const)(fn)
     return triton.jit(fn, version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
 
 @tjit(const='sz')
