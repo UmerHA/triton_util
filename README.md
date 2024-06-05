@@ -52,8 +52,14 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 
 ## Coding utils
 
-`cdiv(a,b)`:
+`cdiv(a,b)`
 - ceiling division
+
+`constify(fn=None, const='', *, but='')`
+- Decorator to make params of `fn` `tl.constexpr`; either every param in `const`, or every param not in `but`. Defaults to noop.
+
+`tjit(fn=None, *, const='', non_const='', **jit_kwargs)`
+- Decorator composition of `constify` and `triton.jit`
 
 `get_1d_offset(sz, n_prev_chunks=0)`
 - Return 1d offsets to `(n_prev_chunks+1)`th chunk of size `sz`
@@ -75,6 +81,15 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 
 `load_full_1d(ptr, sz, stride=1)`
 - Load 1d block of size `sz`
+
+`store_2d(vals, ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1)`
+- Store 2d block into (n0,n1)th chunk of matrix (defined by ptr), where each chunk has size (sz0, sz1)
+
+`store_full_2d(vals, ptr, sz0, sz1, stride0, stride1=1)`
+- Store 2d block into matrix (defined by ptr)
+
+`store_full_1d(vals, ptr, sz, stride=1)`
+- Store 1d block into vector (defined by ptr)
 
 <br/>
 
