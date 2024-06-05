@@ -25,7 +25,7 @@ class TestTritonUtil(unittest.TestCase):
         @constify(but='p4 *_ptr')
         def fn4(p1, p2, p3, p4, p5_ptr, p6): pass
 
-        @constify()
+        @constify
         def fn5(p1, p2, p3): pass
 
         for fn, const_params in [
@@ -33,10 +33,12 @@ class TestTritonUtil(unittest.TestCase):
             (fn2, ['p1', 'p2', 'p3']),
             (fn3, ['p1', 'p2', 'p3', 'p5']),
             (fn4, ['p1', 'p2', 'p3', 'p6']),
-            (fn5, ['p1', 'p2', 'p3']),
+            (fn5, []),
         ]:
             sig = inspect.signature(fn)
-            for name, param in sig.parameters.items(): self.assertTrue(isinstance(param.annotation, tl.const) == (name in const_params))
+            for name, param in sig.parameters.items(): 
+                self.assertTrue((param.annotation==tl.constexpr)==(name in const_params), f'Failed for {fn.__name__} with signature {sig}')
+
 
 if __name__ == '__main__':
     unittest.main()

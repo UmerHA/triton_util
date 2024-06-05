@@ -7,7 +7,7 @@ import triton.language as tl
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def constify(const='', *, but=''):
+def constify(fn=None, const='', *, but=''):
     '''Make params tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
@@ -29,11 +29,12 @@ def constify(const='', *, but=''):
         def wrapper(*args, **kwargs): return fn(*args, **kwargs)
         wrapper.__signature__ = new_sig
         return wrapper
-    return decorator
+    return decorator(fn) if fn is not None else decorator
 
-def tjit(*, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
+def tjit(fn=None, *, const='', non_const='', **kwargs):
     '''Decorator composition of constify and triton.jit'''
-    return lambda fn: triton.jit(fn=constify(const=const, but=non_const)(fn), version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
+    def decorator(fn): return triton.jit(fn=constify(fn, const=const, but=non_const), **kwargs)
+    return decorator(fn) if fn is not None else decorator
 
 @tjit(const='sz')
 def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
