@@ -41,7 +41,7 @@ def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0,
 @tjit
 def get_2d_offset(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
 
-@tjit^
+@tjit
 def get_1d_mask(offs, max): return offs < max
 
 @tjit
