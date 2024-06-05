@@ -31,9 +31,9 @@ def constify(fn=None, const='', *, but=''):
         return wrapper
     return decorator(fn) if fn is not None else decorator
 
-def tjit(fn=None, *, const='', non_const='', **kwargs):
+def tjit(fn=None, *, const='', non_const='', **jit_kwargs):
     '''Decorator composition of constify and triton.jit'''
-    def decorator(fn): return triton.jit(fn=constify(fn, const=const, but=non_const), **kwargs)
+    def decorator(fn): return triton.jit(fn=constify(fn, const=const, but=non_const), **jit_kwargs)
     return decorator(fn) if fn is not None else decorator
 
 @tjit(const='sz')
