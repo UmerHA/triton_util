@@ -5,32 +5,32 @@ import re
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def constify(const='', *, but=''):
-    '''Make params '''
+def constify(fn=None, const='', *, but=''):
+    '''Make params tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
-    def _inner(func):
-        sig = inspect.signature(func)
+    def decorator(fn):
+        sig = inspect.signature(fn)
         def match_pattern(param_name, pattern):
             regex = re.sub(r'\*', r'.*', pattern)
             return re.match(f"^{regex}$", param_name)
-        def should_be_const(param_name):
+        def to_constify(param_name):
             if const != ['']: return any(match_pattern(param_name, pattern) for pattern in const)
             if but   != ['']: return not any(match_pattern(param_name, pattern) for pattern in but)
-            raise False
+            return False
         new_params = [
-            param.replace(annotation=tl.constexpr) if should_be_const(name) else param
+            param.replace(annotation=tl.constexpr) if to_constify(name) else param
             for name, param in sig.parameters.items()
         ]
         new_sig = sig.replace(parameters=new_params)
-        def wrapper(*args, **kwargs): return func(*args, **kwargs)
+        def wrapper(*args, **kwargs): return fn(*args, **kwargs)
         wrapper.__signature__ = new_sig
         return wrapper
-    return _inner
+    return decorator(fn) if fn is not None else decorator
 
 def tjit(fn = None, *, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
     '''Apply constify and triton.jit to fn.'''
-    fn = constify(const=const, but=non_const)(fn)
+    fn = constify(fn, const=const, but=non_const)
     return triton.jit(fn, version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
 
 @tjit(const='sz')
