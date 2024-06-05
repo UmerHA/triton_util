@@ -8,7 +8,7 @@ import triton.language as tl
 def cdiv(a,b): return (a + b - 1) // b
 
 def constify(fn=None, const='', *, but=''):
-    '''Make params tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
+    '''Decorator to make params of fn tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
     def decorator(fn):
