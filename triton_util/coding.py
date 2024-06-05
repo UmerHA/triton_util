@@ -16,18 +16,15 @@ def constify(fn=None, const='', *, but=''):
         def match_pattern(param_name, pattern):
             regex = re.sub(r'\*', r'.*', pattern)
             return re.match(f"^{regex}$", param_name)
-        def to_constify(param_name):
-            if const != ['']: return     any(match_pattern(param_name, pattern) for pattern in const)
-            if but   != ['']: return not any(match_pattern(param_name, pattern) for pattern in but)
-            return False
-        new_params = [
-            param.replace(annotation=tl.constexpr) if to_constify(name) else param
-            for name, param in sig.parameters.items()
-        ]
-        new_sig = sig.replace(parameters=new_params)
+        to_constify = []
+        if const != ['']: to_constify = [name for name, _ in sig.parameters.items() if     any(match_pattern(name, pattern) for pattern in const)]
+        if but   != ['']: to_constify = [name for name, _ in sig.parameters.items() if not any(match_pattern(name, pattern) for pattern in but  )]
         @wraps(fn)
-        def wrapper(*args, **kwargs): return fn(*args, **kwargs)
-        wrapper.__signature__ = new_sig
+        def wrapper(*args, **kwargs):
+            # handle case that kwargs = {args: ..., kwargs: ...}, due to a bug in triton interpreter.
+            if 'args' in kwargs and 'kwargs' in kwargs: args, kwargs = kwargs['args'], kwargs['kwargs']
+            return fn(*args, **kwargs)
+        wrapper.__annotations__.update({p:tl.constexpr for p in to_constify})
         return wrapper
     return decorator(fn) if fn is not None else decorator
 
