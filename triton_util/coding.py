@@ -1,11 +1,13 @@
+import re
+import inspect
+from functools import wraps
+
 import triton
 import triton.language as tl
-import inspect
-import re
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def constify(fn=None, const='', *, but=''):
+def constify(const='', *, but=''):
     '''Make params tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
     assert const == '' or but == '', 'Provide either const or but, not both'
     const, but = const.split(' '), but.split(' ')
@@ -15,7 +17,7 @@ def constify(fn=None, const='', *, but=''):
             regex = re.sub(r'\*', r'.*', pattern)
             return re.match(f"^{regex}$", param_name)
         def to_constify(param_name):
-            if const != ['']: return any(match_pattern(param_name, pattern) for pattern in const)
+            if const != ['']: return     any(match_pattern(param_name, pattern) for pattern in const)
             if but   != ['']: return not any(match_pattern(param_name, pattern) for pattern in but)
             return False
         new_params = [
@@ -23,15 +25,15 @@ def constify(fn=None, const='', *, but=''):
             for name, param in sig.parameters.items()
         ]
         new_sig = sig.replace(parameters=new_params)
+        @wraps(fn)
         def wrapper(*args, **kwargs): return fn(*args, **kwargs)
         wrapper.__signature__ = new_sig
         return wrapper
-    return decorator(fn) if fn is not None else decorator
+    return decorator
 
-def tjit(fn = None, *, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
-    '''Apply constify and triton.jit to fn.'''
-    fn = constify(fn, const=const, but=non_const)
-    return triton.jit(fn, version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
+def tjit(*, const='', non_const='', version=None, do_not_specialize = None, debug = None, noinline = None):
+    '''Decorator composition of constify and triton.jit'''
+    return lambda fn: triton.jit(fn=constify(const=const, but=non_const)(fn), version=version, do_not_specialize=do_not_specialize, debug=debug, noinline=noinline)
 
 @tjit(const='sz')
 def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
@@ -39,7 +41,7 @@ def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0,
 @tjit
 def get_2d_offset(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
 
-@tjit
+@tjit^
 def get_1d_mask(offs, max): return offs < max
 
 @tjit
