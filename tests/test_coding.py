@@ -96,10 +96,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n=0)
-        assert o == [1,1,0,0]
+        assert list(o) == [1,1,0,0]
 
         partial_copy[(1,)](i, o, n=1)
-        assert o == [1,1,1,1]
+        assert list(o) == [1,1,1,1]
 
     def test_get_2d_offset(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -115,10 +115,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n1=0, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
 
         partial_copy[(1,)](i, o, n1=1, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
     
     ## masks
 
@@ -134,10 +134,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n=0)
-        assert o == [1,1,0,0]
+        assert list(o) == [1,1,0,0]
 
         partial_copy[(1,)](i, o, n=1)
-        assert o == [1,1,1,1]
+        assert list(o) == [1,1,1,1]
     
     def test_get_2d_mask(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -153,10 +153,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n1=0, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
 
         partial_copy[(1,)](i, o, n1=1, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
 
     # # load
 
@@ -172,10 +172,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n=0)
-        assert o == [1,1,0,0]
+        assert list(o) == [1,1,0,0]
 
         partial_copy[(1,)](i, o, n=1)
-        assert o == [1,1,1,1]
+        assert list(o) == [1,1,1,1]
 
     def test_load_full_1d(self, triton_interpret):
         i = torch.ones(4, device='cuda')
@@ -189,7 +189,7 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         copy[(1,)](i, o)
-        assert o == i
+        assert list(o) == list(i)
 
     def test_load_2d(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -205,10 +205,10 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         partial_copy[(1,)](i, o, n1=0, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
 
         partial_copy[(1,)](i, o, n1=1, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
     
     def test_load_full_2d(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -224,7 +224,7 @@ class TestCodingUtils:
             tl.store(o_ptr + offs, vals, mask)            
 
         copy[(1,)](i, o)
-        assert o == i
+        assert list(o) == list(i)
 
     # # store
 
@@ -240,10 +240,10 @@ class TestCodingUtils:
             store_1d(vals, o_ptr, 2, n, 4)
 
         partial_copy[(1,)](i, o, n=0)
-        assert o == [1,1,0,0]
+        assert list(o) == [1,1,0,0]
 
         partial_copy[(1,)](i, o, n=1)
-        assert o == [1,1,1,1]
+        assert list(o) == [1,1,1,1]
 
     def test_store_full_1d(self, triton_interpret):
         i = torch.ones(4, device='cuda')
@@ -257,7 +257,7 @@ class TestCodingUtils:
             store_full_1d(vals, o_ptr, 4)
 
         copy[(1,)](i, o)
-        assert o==i
+        assert list(o) == list(i)
 
     def test_store_2d(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -273,10 +273,10 @@ class TestCodingUtils:
             store_2d(vals, o_ptr, 2, 2, n1, n2, 4, 4, 4, 1)
 
         partial_copy[(1,)](i, o, n1=0, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [0,0,0,0], [0,0,0,0]]
 
         partial_copy[(1,)](i, o, n1=1, n2=0)
-        assert o == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
+        assert list(o) == [[1,1,0,0], [1,1,0,0], [1,1,0,0], [1,1,0,0]]
 
     def test_store_full_2d(self, triton_interpret):
         i = torch.ones(4,4, device='cuda')
@@ -292,7 +292,7 @@ class TestCodingUtils:
             store_full_2d(vals, o_ptr, 4, 4, 4, 1)
 
         copy[(1,)](i, o, n1=0, n2=0)
-        assert o==i
+        assert list(o) == list(i)
 
 if __name__ == '__main__':
     pytest.main()
