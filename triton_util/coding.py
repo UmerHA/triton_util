@@ -33,17 +33,37 @@ def tjit(fn=None, *, const='', non_const='', **jit_kwargs):
     def decorator(fn): return triton.jit(fn=constify(fn, const=const, but=non_const), **jit_kwargs)
     return decorator(fn) if fn is not None else decorator
 
+# # offsets
+
 @tjit(const='sz')
 def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
 
 @tjit
 def get_2d_offset(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
 
+# # masks
+
 @tjit
 def get_1d_mask(offs, max): return offs < max
 
 @tjit
 def get_2d_mask(offs0, offs1, max0, max1): return (tl.expand_dims(offs0, 1) < max0) & (tl.expand_dims(offs1, 0) < max1)
+
+# # load
+
+@tjit(const='sz')
+def load_1d(ptr, sz, n, max, stride=1):
+    '''Chunk 1d vector (defined by ptr) into 1d grid, where each chunk has size (sz). Load the nth chunk. Ie, load [n*sz,...,(n+1)*sz-1].'''
+    offs = get_1d_offset(sz, n)
+    mask = get_1d_mask(offs, max)
+    return tl.load(ptr + offs, mask) 
+
+@tjit(const='sz')
+def load_full_1d(ptr, sz, stride=1):
+    '''Load 1d block [0,...,sz-1]'''
+    offs = get_1d_offset(sz)
+    mask = get_1d_mask(offs, sz)
+    return tl.load(ptr + offs, mask) 
 
 @tjit(const='sz0 sz1')
 def load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1):
@@ -61,12 +81,21 @@ def load_full_2d(ptr, sz0, sz1, stride0, stride1=1):
     mask = get_2d_mask(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
     return tl.load(ptr + offs, mask) 
 
+# # store
+
 @tjit(const='sz')
-def load_full_1d(ptr, sz, stride=1):
-    '''Load 1d block [0,...,sz-1]'''
+def store_1d(vals, ptr, sz, n, max, stride=1):
+    '''Store 1d block into nth chunk of vector (defined by ptr), where each chunk has size sz'''
+    offs = get_1d_offset(sz, n)
+    mask = get_1d_mask(offs, max)
+    return tl.store(ptr + offs, vals, mask)
+
+@tjit(const='sz')
+def store_full_1d(vals, ptr, sz, stride=1):
+    '''Store 1d block into vector (defined by ptr)'''
     offs = get_1d_offset(sz)
     mask = get_1d_mask(offs, sz)
-    return tl.load(ptr + offs, mask) 
+    return tl.store(ptr + offs, vals, mask)
 
 @tjit(const='sz0 sz1')
 def store_2d(vals, ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1):
@@ -84,9 +113,3 @@ def store_full_2d(vals, ptr, sz0, sz1, stride0, stride1=1):
     mask = get_2d_mask(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
     return tl.store(ptr + offs, vals, mask)
 
-@tjit(const='sz')
-def store_full_1d(vals, ptr, sz, stride=1):
-    '''Store 1d block into vector (defined by ptr)'''
-    offs = get_1d_offset(sz)
-    mask = get_1d_mask(offs, sz)
-    return tl.store(ptr + offs, vals, mask)
