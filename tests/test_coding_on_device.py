@@ -1,10 +1,19 @@
+import os
+import importlib
 
+import pytest
 import unittest
-import inspect
 
+import triton
 import triton.language as tl
 
 from triton_util.coding import cdiv, constify, tjit
+
+@pytest.fixture(scope="class", autouse=True)
+def set_env_and_reload(request):
+    os.environ['TRITON_INTERPRET'] = '0'
+    importlib.reload(triton)
+    importlib.reload(tl)
 
 class TestTritonUtil(unittest.TestCase):
     
