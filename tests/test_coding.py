@@ -1,27 +1,20 @@
 import os
 import importlib
+import inspect
 
 import pytest
-import unittest
 
 import triton
 import triton.language as tl
 
 from triton_util.coding import cdiv, constify, tjit
 
-@pytest.fixture(scope="class", autouse=True)
-def set_env_and_reload(request):
-    os.environ['TRITON_INTERPRET'] = '0'
-    importlib.reload(triton)
-    importlib.reload(tl)
-
-class TestTritonUtil(unittest.TestCase):
-    
+class TestCodingUtils:
     def test_cdiv(self):
-        self.assertEqual(cdiv(10, 2), 5)
-        self.assertEqual(cdiv(10, 3), 4)
+        assert cdiv(10, 2)==5
+        assert cdiv(10, 3)==4
 
-    def test_tjit(self):
+    def test_tjit(self, triton_interpret):
         @tjit(const='p1 p2 p3')
         def fn1(p1, p2, p3, p4, p5_ptr, p6):
             tl.arange(0,p1) # tl.arange expects constexpr
@@ -52,8 +45,7 @@ class TestTritonUtil(unittest.TestCase):
         def fn5(p1, p2, p3): pass
 
         @tjit
-        def fn6(p1, p2, p3: tl.constexpr):
-            tl.arange(0,p3)
+        def fn6(p1, p2, p3: tl.constexpr): tl.arange(0,p3)
 
         # tl.arange needs multiple of 2, so 8 is valid, but 1 is not
         fn1[(1,)](8,8,8,1,1,1)
@@ -63,7 +55,7 @@ class TestTritonUtil(unittest.TestCase):
         fn5[(1,)](1,1,1)
         fn6[(1,)](1,1,8)
 
-    def test_constify(self):
+    def test_constify(self, triton_interpret):
         @constify(const='p1 p2 p3')
         def fn1(p1, p2, p3, p4, p5_ptr, p6): pass
 
@@ -88,7 +80,7 @@ class TestTritonUtil(unittest.TestCase):
         ]:
             sig = inspect.signature(fn)
             for name, param in sig.parameters.items(): 
-                self.assertTrue((param.annotation==tl.constexpr)==(name in const_params), f'Failed for {fn.__name__} with signature {sig}')
+                assert (param.annotation==tl.constexpr)==(name in const_params), f'Failed for {fn.__name__} with signature {sig}'
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()
