@@ -18,7 +18,7 @@ class TestDebuggingUtils:
         t1 = torch.ones(4, device='cuda')      # gpu, contiguous
         t2 = torch.ones(4)                     # cpu, contiguous 
         t3 = torch.ones(4, device='cuda')[::2] # gpu, non-contiguous
-        t3 = torch.ones(4)[::2]                # cpu, non-contiguous
+        t4 = torch.ones(4)[::2]                # cpu, non-contiguous
 
         assert_tensors_gpu_ready(t1)
         
