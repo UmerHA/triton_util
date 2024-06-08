@@ -61,17 +61,23 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 `tjit(fn=None, *, const='', non_const='', **jit_kwargs)`
 - Decorator composition of `constify` and `triton.jit`
 
-`get_1d_offset(sz, n_prev_chunks=0)`
+`offset_1d(sz, n_prev_chunks=0)`
 - Return 1d offsets to `(n_prev_chunks+1)`th chunk of size `sz`
 
-`get_2d_offset(offs_0, offs_1, stride_0, stride_1=1)`
+`offset_2d(offs_0, offs_1, stride_0, stride_1=1)`
 - Create a 2d offets from two 1d offets
 
-`get_1d_mask(offs, max)`
+`mask_1d(offs, max)`
 - Create a 1d mask from a 1d offset and a max value
 
-`get_2d_mask(offs_0, offs_1, max_0, max_1)`
+`mask_2d(offs_0, offs_1, max_0, max_1)`
 - Create a 2d mask from two 1d offsets and max values
+
+`load_1d(ptr, sz, stride=1)`
+- Chunk 1d vector (defined by ptr) into 1d grid, where each chunk has size `sz`, and load the `n`th chunk.
+
+`load_full_1d(ptr, sz, stride=1)`
+- Load 1d block of size `sz`
 
 `load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1)`
 - Chunk 2d matrix (defined by ptr) into 2d grid, where each chunk has size `(sz0,sz1)`, and load the `(n0,n1)`th chunk.
@@ -79,17 +85,19 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 `load_full_2d(ptr, sz0, sz1, stride0, stride1=1)`
 - Load 2d block of size `sz0 x sz1`
 
-`load_full_1d(ptr, sz, stride=1)`
-- Load 1d block of size `sz`
+`store_1d(vals, ptr, sz, stride=1)`
+- Store 1d block into `n`th chunk of vector (defined by ptr), where each chunk has size `sz`
+
+`store_full_1d(vals, ptr, sz, stride=1)`
+- Store 1d block into vector (defined by ptr)
 
 `store_2d(vals, ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1)`
-- Store 2d block into (n0,n1)th chunk of matrix (defined by ptr), where each chunk has size (sz0, sz1)
+- Store 2d block into `(n0,n1)`th chunk of matrix (defined by ptr), where each chunk has size `(sz0, sz1)`
 
 `store_full_2d(vals, ptr, sz0, sz1, stride0, stride1=1)`
 - Store 2d block into matrix (defined by ptr)
 
-`store_full_1d(vals, ptr, sz, stride=1)`
-- Store 1d block into vector (defined by ptr)
+
 
 <br/>
 
