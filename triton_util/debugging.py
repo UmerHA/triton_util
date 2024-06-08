@@ -28,7 +28,7 @@ def test_pid_conds(conds):
         ',>1'   checks that pid_1 > 1
         '>1,=0' checks that pid_0 > 1 and pid_1 == 0
     '''
-    return _test_pid_conds(conds, tl.program_id(0), tl.program_id(1), tl.program_id(2))
+    return _test_pid_conds(conds, tl.program_id(0).handle.data[0], tl.program_id(1).handle.data[0], tl.program_id(2).handle.data[0])
 
 @triton.jit
 def breakpoint_if(conds):
