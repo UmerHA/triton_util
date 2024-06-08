@@ -1,115 +1,85 @@
-import re
-import inspect
-from functools import wraps
-
 import triton
 import triton.language as tl
+from triton.language import constexpr as const
 
 def cdiv(a,b): return (a + b - 1) // b
 
-def constify(fn=None, const='', *, but=''):
-    '''Decorator to make params of fn tl.constexpr; either every param in const, or every param not in but. Defaults to noop.'''
-    assert const == '' or but == '', 'Provide either const or but, not both'
-    const, but = const.split(' '), but.split(' ')
-    def decorator(fn):
-        sig = inspect.signature(fn)
-        def match_pattern(param_name, pattern):
-            regex = re.sub(r'\*', r'.*', pattern)
-            return re.match(f"^{regex}$", param_name)
-        to_constify = []
-        if const != ['']: to_constify = [name for name, _ in sig.parameters.items() if     any(match_pattern(name, pattern) for pattern in const)]
-        if but   != ['']: to_constify = [name for name, _ in sig.parameters.items() if not any(match_pattern(name, pattern) for pattern in but  )]
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            # handle case that kwargs = {args: ..., kwargs: ...}, due to a bug in triton interpreter.
-            if 'args' in kwargs and 'kwargs' in kwargs: args, kwargs = kwargs['args'], kwargs['kwargs']
-            return fn(*args, **kwargs)
-        wrapper.__annotations__.update({p:tl.constexpr for p in to_constify})
-        return wrapper
-    return decorator(fn) if fn is not None else decorator
-
-def tjit(fn=None, *, const='', non_const='', **jit_kwargs):
-    '''Decorator composition of constify and triton.jit'''
-    def decorator(fn): return triton.jit(fn=constify(fn, const=const, but=non_const), **jit_kwargs)
-    return decorator(fn) if fn is not None else decorator
-
 # # offsets
 
-@tjit(const='sz')
-def get_1d_offset(sz, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
+@triton.jit
+def offset_1d(sz: const, n_prev_chunks=0): return n_prev_chunks * sz + tl.arange(0, sz)
 
-@tjit
-def get_2d_offset(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
+@triton.jit
+def offset_2d(offs0, offs1, stride0, stride1=1):  return tl.expand_dims(offs0, 1)*stride0 + tl.expand_dims(offs1, 0)*stride1
 
 # # masks
 
-@tjit
-def get_1d_mask(offs, max): return offs < max
+@triton.jit
+def mask_1d(offs, max): return offs < max
 
-@tjit
-def get_2d_mask(offs0, offs1, max0, max1): return (tl.expand_dims(offs0, 1) < max0) & (tl.expand_dims(offs1, 0) < max1)
+@triton.jit
+def mask_2d(offs0, offs1, max0, max1): return (tl.expand_dims(offs0, 1) < max0) & (tl.expand_dims(offs1, 0) < max1)
 
 # # load
 
-@tjit(const='sz')
-def load_1d(ptr, sz, n, max, stride=1):
-    '''Chunk 1d vector (defined by ptr) into 1d grid, where each chunk has size (sz). Load the nth chunk. Ie, load [n*sz,...,(n+1)*sz-1].'''
-    offs = get_1d_offset(sz, n)
-    mask = get_1d_mask(offs, max)
+@triton.jit
+def load_1d(ptr, sz: const, n, max, stride=1):
+    '''Chunk 1d vector (defined by ptr) into 1d grid, where each chunk has size sz. Load the nth chunk. Ie, load [n*sz,...,(n+1)*sz-1].'''
+    offs = offset_1d(sz, n)
+    mask = mask_1d(offs, max)
     return tl.load(ptr + offs, mask) 
 
-@tjit(const='sz')
-def load_full_1d(ptr, sz, stride=1):
+@triton.jit
+def load_full_1d(ptr, sz: const, stride=1):
     '''Load 1d block [0,...,sz-1]'''
-    offs = get_1d_offset(sz)
-    mask = get_1d_mask(offs, sz)
+    offs = offset_1d(sz)
+    mask = mask_1d(offs, sz)
     return tl.load(ptr + offs, mask) 
 
-@tjit(const='sz0 sz1')
-def load_2d(ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1):
+@triton.jit
+def load_2d(ptr, sz0: const, sz1: const, n0, n1, max0, max1, stride0, stride1=1):
     '''Chunk 2d matrix (defined by ptr) into 2d grid, where each chunk has size (sz0,sz1). Load the (n0,n1)th chunk. Ie, load [n0*sz0,...,(n0+1)*sz0-1] x [n1*sz1,...,(n1+1)*sz1-1].'''
-    offs0 = get_1d_offset(sz0, n0)
-    offs1 = get_1d_offset(sz1, n1)        
-    offs = get_2d_offset(offs0, offs1, stride0, stride1)
-    mask = get_2d_mask(offs0, offs1, max0, max1)
+    offs0 = offset_1d(sz0, n0)
+    offs1 = offset_1d(sz1, n1)        
+    offs = offset_2d(offs0, offs1, stride0, stride1)
+    mask = mask_2d(offs0, offs1, max0, max1)
     return tl.load(ptr + offs, mask) 
 
-@tjit(const='sz0 sz1')
-def load_full_2d(ptr, sz0, sz1, stride0, stride1=1):
+@triton.jit
+def load_full_2d(ptr, sz0: const, sz1: const, stride0, stride1=1):
     '''Load 2d block [0,...,sz0-1] x [0,...,sz1-1] '''
-    offs = get_2d_offset(tl.arange(0, sz0), tl.arange(0, sz1), stride0, stride1)
-    mask = get_2d_mask(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
+    offs = offset_2d(tl.arange(0, sz0), tl.arange(0, sz1), stride0, stride1)
+    mask = mask_2d(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
     return tl.load(ptr + offs, mask) 
 
 # # store
 
-@tjit(const='sz')
-def store_1d(vals, ptr, sz, n, max, stride=1):
+@triton.jit
+def store_1d(vals, ptr, sz: const, n, max, stride=1):
     '''Store 1d block into nth chunk of vector (defined by ptr), where each chunk has size sz'''
-    offs = get_1d_offset(sz, n)
-    mask = get_1d_mask(offs, max)
+    offs = offset_1d(sz, n)
+    mask = mask_1d(offs, max)
     return tl.store(ptr + offs, vals, mask)
 
-@tjit(const='sz')
-def store_full_1d(vals, ptr, sz, stride=1):
+@triton.jit
+def store_full_1d(vals, ptr, sz: const, stride=1):
     '''Store 1d block into vector (defined by ptr)'''
-    offs = get_1d_offset(sz)
-    mask = get_1d_mask(offs, sz)
+    offs = offset_1d(sz)
+    mask = mask_1d(offs, sz)
     return tl.store(ptr + offs, vals, mask)
 
-@tjit(const='sz0 sz1')
-def store_2d(vals, ptr, sz0, sz1, n0, n1, max0, max1, stride0, stride1=1):
+@triton.jit
+def store_2d(vals, ptr, sz0: const, sz1: const, n0, n1, max0, max1, stride0, stride1=1):
     '''Store 2d block into (n0,n1)th chunk of matrix (defined by ptr), where each chunk has size (sz0, sz1)'''
-    offs0 = get_1d_offset(sz0, n0)
-    offs1 = get_1d_offset(sz1, n1)        
-    offs = get_2d_offset(offs0, offs1, stride0, stride1)
-    mask = get_2d_mask(offs0, offs1, max0, max1)
+    offs0 = offset_1d(sz0, n0)
+    offs1 = offset_1d(sz1, n1)        
+    offs = offset_2d(offs0, offs1, stride0, stride1)
+    mask = mask_2d(offs0, offs1, max0, max1)
     tl.store(ptr + offs, vals, mask)
 
-@tjit(const='sz0 sz1')
-def store_full_2d(vals, ptr, sz0, sz1, stride0, stride1=1):
+@triton.jit
+def store_full_2d(vals, ptr, sz0: const, sz1: const, stride0, stride1=1):
     '''Store 2d block into matrix (defined by ptr)'''
-    offs = get_2d_offset(tl.arange(0, sz0), tl.arange(0, sz1), stride0, stride1)
-    mask = get_2d_mask(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
+    offs = offset_2d(tl.arange(0, sz0), tl.arange(0, sz1), stride0, stride1)
+    mask = mask_2d(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
     return tl.store(ptr + offs, vals, mask)
-
