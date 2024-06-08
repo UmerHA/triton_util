@@ -6,13 +6,14 @@ import triton
 import triton.language as tl
 
 import triton_util as tu
+from triton_util.debugging import _test_pid_conds
 
 class TestDebuggingUtils:
     def test_test_pid_conds(self):
-        assert tu._test_pid_conds('')
-        assert tu._test_pid_conds('>0', 1, 1)
-        assert not tu._test_pid_conds('>0', 0, 1)
-        assert tu._test_pid_conds('=0,=1', 0, 1, 0)
+        assert _test_pid_conds('')
+        assert _test_pid_conds('>0', 1, 1)
+        assert not _test_pid_conds('>0', 0, 1)
+        assert _test_pid_conds('=0,=1', 0, 1, 0)
 
     def test_assert_tensors_gpu_ready(self, triton_interpret):
         t1 = torch.ones(4, device='cuda')      # gpu, contiguous
