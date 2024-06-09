@@ -55,12 +55,6 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 `cdiv(a,b)`
 - ceiling division
 
-`constify(fn=None, const='', *, but='')`
-- Decorator to make params of `fn` `tl.constexpr`; either every param in `const`, or every param not in `but`. Defaults to noop.
-
-`tjit(fn=None, *, const='', non_const='', **jit_kwargs)`
-- Decorator composition of `constify` and `triton.jit`
-
 `offset_1d(sz, n_prev_chunks=0)`
 - Return 1d offsets to `(n_prev_chunks+1)`th chunk of size `sz`
 
