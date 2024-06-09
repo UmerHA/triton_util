@@ -73,7 +73,7 @@ Finally, triton-util is progressive, ie you can **use as little or as much as yo
 `mask_2d(offs_0, offs_1, max_0, max_1)`
 - Create a 2d mask from two 1d offsets and max values
 
-`load_1d(ptr, sz, stride=1)`
+`load_1d(ptr, sz: const, n, max, stride=1)`
 - Chunk 1d vector (defined by ptr) into 1d grid, where each chunk has size `sz`, and load the `n`th chunk.
 
 `load_full_1d(ptr, sz, stride=1)`
