@@ -45,7 +45,7 @@ def print_if(*txt, conds):
 def breakpoint_once(): breakpoint_if('=0,=0,=0')
 
 @triton.jit
-def print_once(*txt): print_if(*txt,'=0,=0,=0')
+def print_once(*txt): print_if(*txt,conds='=0,=0,=0')
 
 def assert_tensors_gpu_ready(*tensors):
     for t in tensors:
