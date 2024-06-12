@@ -61,14 +61,14 @@ def store_1d(vals, ptr, sz: const, n, max, stride=1):
     '''Store 1d block into nth chunk of vector (defined by ptr), where each chunk has size sz'''
     offs = offset_1d(sz, n)
     mask = mask_1d(offs, max)
-    return tl.store(ptr + offs, vals, mask)
+    tl.store(ptr + offs, vals, mask)
 
 @triton.jit
 def store_full_1d(vals, ptr, sz: const, stride=1):
     '''Store 1d block into vector (defined by ptr)'''
     offs = offset_1d(sz)
     mask = mask_1d(offs, sz)
-    return tl.store(ptr + offs, vals, mask)
+    tl.store(ptr + offs, vals, mask)
 
 @triton.jit
 def store_2d(vals, ptr, sz0: const, sz1: const, n0, n1, max0, max1, stride0=None, stride1=1):
@@ -86,4 +86,4 @@ def store_full_2d(vals, ptr, sz0: const, sz1: const, stride0=None, stride1=1):
     stride0 = stride0 or sz1
     offs = offset_2d(tl.arange(0, sz0), tl.arange(0, sz1), stride0, stride1)
     mask = mask_2d(  tl.arange(0, sz0), tl.arange(0, sz1), sz0, sz1)
-    return tl.store(ptr + offs, vals, mask)
+    tl.store(ptr + offs, vals, mask)
