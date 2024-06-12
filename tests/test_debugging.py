@@ -6,7 +6,7 @@ import triton
 import triton.language as tl
 
 import triton_util as tu
-from triton_util.debugging import _test_pid_conds
+from triton_util.debugging import _test_pid_conds, offsets_from_base
 
 class TestDebuggingUtils:
     def test_test_pid_conds(self):
@@ -32,6 +32,19 @@ class TestDebuggingUtils:
 
         with pytest.raises(AssertionError): tu.assert_tensors_gpu_ready(t4)
 
+    def test_offsets_from_base(self, triton_interpret):
+
+        t = torch.zeros(4, device='cuda')
+        out = torch.empty(4, device='cuda')
+
+        @triton.jit
+        def some_kernel(t_ptr, out_ptr):
+            offs = offsets_from_base(t_ptr + tl.arange(4), t_ptr)
+            tl.store(out_ptr, offs)
+
+        some_kernel[(1,)](t, out)
+
+        assert list(out) == list(range(4))
 
 if __name__ == '__main__':
     pytest.main()

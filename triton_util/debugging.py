@@ -51,3 +51,8 @@ def assert_tensors_gpu_ready(*tensors):
     for t in tensors:
         assert t.is_contiguous(), "A tensor is not contiguous"
         if not os.environ.get('TRITON_INTERPRET') == '1': assert t.is_cuda, "A tensor is not on cuda"
+
+@triton.jit
+def offsets_from_base(ptrs, base_ptr):
+    '''Return offsets for which ptrs = base_ptr + offsets''' # todo umer: write test
+    return ptrs.to(tl.uint64) - base_ptr.to(tl.uint64)
